@@ -98,13 +98,6 @@ const competitions={
         ]
       },
       'DIV 2':{
-        'Free Exercises':[
-          ['Regent','Send in the Clowns'],
-          ['Ceres','Lonely People'],
-          ['Jeaden','I am Gladiator'],
-          ['Avonde','Escape of the Puppets'],
-          ['Merinda','Take Me To Church']
-        ],
         'Clubs':[
           ['Ceres','The Art of Embracing Brokenness'],
           ['Jeaden','The Movie in my Mind'],
@@ -118,6 +111,13 @@ const competitions={
           ['Avonde','Rasputin - The Saint Who Sinned'],
           ['Ceres','Studio 54'],
           ['Regent','Thunderstruck']
+        ],
+        'Free Exercises':[
+          ['Regent','Send in the Clowns'],
+          ['Ceres','Lonely People'],
+          ['Jeaden','I am Gladiator'],
+          ['Avonde','Escape of the Puppets'],
+          ['Merinda','Take Me To Church']
         ],
         'Rhythmical Aesthetics':[
           ['Merinda','The Wall Between Us'],
@@ -137,7 +137,7 @@ const competitions={
 
 const DB_NAME='CaliChampDeviceData',STORE_NAME='appState',STATE_ID='primary',SCHEMA_VERSION=1;
 let db,appState={schemaVersion:SCHEMA_VERSION,updatedAt:null,entries:{},preferences:{lastCompetition:'Comp 4',lastDivision:'DIV 1',lastCategory:'March'}},competition='Comp 4',division='DIV 1',category='March',selected=null;
-const standardPts={'1st':6,'2nd':4,'3rd':2,'HM':1,'HC':.5},stateTitlesPts={'1st':14,'2nd':8,'3rd':6,'HM':4,'HC':3},pointsFor=comp=>comp==='Comp 4'?stateTitlesPts:standardPts,key=(c,d,e,i)=>`${c}|${d}|${e}|${i}`,getClubs=d=>d==='DIV 1'?['Avonde','Ceres','Jeaden','Merinda','Regent','Robynmore']:['Avonde','Ceres','Jeaden','Merinda','Regent'],saved=()=>appState.entries;
+const pts={'1st':6,'2nd':4,'3rd':2,'HM':1,'HC':.5},key=(c,d,e,i)=>`${c}|${d}|${e}|${i}`,getClubs=d=>d==='DIV 1'?['Avonde','Ceres','Jeaden','Merinda','Regent','Robynmore']:['Avonde','Ceres','Jeaden','Merinda','Regent'],saved=()=>appState.entries;
 
 function toast(m){const e=document.getElementById('toast');e.textContent=m;e.style.display='block';setTimeout(()=>e.style.display='none',2400)}
 function status(m){document.getElementById('storageStatus').textContent=m}
@@ -286,15 +286,15 @@ function entries(){
   })
 }
 
-function previous(club,title){
+function previous(club){
   const names=Object.keys(competitions),i=names.indexOf(competition);
   if(i<=0)return null;
   const p=names[i-1],items=competitions[p]?.divisions[division]?.[category];
   if(!items)return{competition:p,found:false};
-  const index=items.findIndex(([c,t])=>c===club&&t===title);
+  const index=items.findIndex(([previousClub])=>previousClub===club);
   if(index<0)return{competition:p,found:false};
   const x=saved()[key(p,division,category,index)]||{};
-  return{competition:p,found:true,place:x.place||null,points:x.place?pointsFor(p)[x.place]:null}
+  return{competition:p,found:true,place:x.place||null,points:x.place?pts[x.place]:null}
 }
 
 function detail(){
@@ -303,8 +303,8 @@ function detail(){
     e.innerHTML='<div class="empty">Select an item to record a note or result.</div>';
     return
   }
-  const [club,title]=competitions[competition].divisions[division][category][selected],k=key(competition,division,category,selected),v=saved()[k]||{},only=division==='DIV 2'&&category==='Dance Arrangement',p=previous(club,title),prior=!p?'':`<div style="margin:14px 0;padding:12px;background:#edf8fc;border:1px solid #cfe8f2;border-radius:9px"><strong style="display:block;color:#087da9;font-size:13px">Previous competition reference</strong>${!p.found?`<span style="font-size:13px;color:#637080">No matching performance was listed in ${esc(p.competition)}.</span>`:p.place?`<span style="font-size:14px">${esc(p.competition)} · ${p.place} · ${p.points} points</span>`:`<span style="font-size:13px;color:#637080">Matching performance found in ${esc(p.competition)}, but no placement is recorded on this device.</span>`}</div>`;
-  e.innerHTML=`<div class="itemhead"><div><h3>${esc(club)}</h3><p>${esc(title)}</p></div><span class="badge">#${selected+1}</span></div>${prior}<label for="notes">Your notes</label><textarea id="notes" placeholder="Performance notes, favourite moment, costume details…"></textarea><label>Announced placing</label><div class="scoregrid">${Object.keys(pointsFor(competition)).map(x=>`<button class="score ${v.place===x?'selected':''}" data-place="${x}">${competition==='Comp 4'?`${x} · ${pointsFor(competition)[x]} pts`:x}</button>`).join('')}</div><button class="save" id="save">Save entry</button><p class="help">${only?'Division 2 Dance Arrangement placements can be saved, but are excluded from the Division 2 Aggregate.':'Leave placing unselected if you only want to save notes.'}</p>`;
+  const [club,title]=competitions[competition].divisions[division][category][selected],k=key(competition,division,category,selected),v=saved()[k]||{},only=division==='DIV 2'&&category==='Dance Arrangement',p=previous(club),prior=!p?'':`<div style="margin:14px 0;padding:12px;background:#edf8fc;border:1px solid #cfe8f2;border-radius:9px"><strong style="display:block;color:#087da9;font-size:13px">Previous competition reference</strong>${!p.found?`<span style="font-size:13px;color:#637080">No matching performance was listed in ${esc(p.competition)}.</span>`:p.place?`<span style="font-size:14px">${esc(p.competition)} · ${p.place} · ${p.points} points</span>`:`<span style="font-size:13px;color:#637080">Matching performance found in ${esc(p.competition)}, but no placement is recorded on this device.</span>`}</div>`;
+  e.innerHTML=`<div class="itemhead"><div><h3>${esc(club)}</h3><p>${esc(title)}</p></div><span class="badge">#${selected+1}</span></div>${prior}<label for="notes">Your notes</label><textarea id="notes" placeholder="Performance notes, favourite moment, costume details…"></textarea><label>Announced placing</label><div class="scoregrid">${Object.keys(pts).map(x=>`<button class="score ${v.place===x?'selected':''}" data-place="${x}">${x}</button>`).join('')}</div><button class="save" id="save">Save entry</button><p class="help">${only?'Division 2 Dance Arrangement placements can be saved, but are excluded from the Division 2 Aggregate.':'Leave placing unselected if you only want to save notes.'}</p>`;
   document.getElementById('notes').value=v.notes||'';
   e.querySelectorAll('[data-place]').forEach(b=>b.onclick=()=>{
     v.place=v.place===b.dataset.place?null:b.dataset.place;
@@ -324,7 +324,7 @@ function leaderboard(){
     const [c,d,e,i]=k.split('|');
     if(c!==competition||d!==division||(d==='DIV 2'&&e==='Dance Arrangement'))return;
     const item=competitions[c]?.divisions[d]?.[e]?.[Number(i)],v=saved()[k];
-    if(item&&v?.place)t[item[0]]=(t[item[0]]||0)+pointsFor(competition)[v.place]
+    if(item&&v?.place)t[item[0]]=(t[item[0]]||0)+pts[v.place]
   });
   return getClubs(division).map(club=>({club,points:t[club]||0})).sort((a,b)=>b.points-a.points||a.club.localeCompare(b.club))
 }
@@ -358,7 +358,7 @@ function download(){
     doc.setFont('helvetica','bold');
     write(name.toUpperCase(),m,w-m*2,13,6);
     items.forEach(([club,title],i)=>{
-      const v=saved()[key(competition,division,name,i)]||{},place=v.place||'Not recorded',score=v.place?` · ${pointsFor(competition)[v.place]} pts`:'';
+      const v=saved()[key(competition,division,name,i)]||{},place=v.place||'Not recorded',score=v.place?` · ${pts[v.place]} pts`:'';
       room(18);
       doc.setTextColor(23,33,43);
       write(`${i+1}. ${club} — ${title}`,m,w-m*2);
@@ -394,7 +394,7 @@ function buildCard(type){
   let b='';
   if(type==='section'){
     const items=c.divisions[division][category];
-    b=`<div class="share-section"><h2>${esc(category)} · ${esc(division)}</h2><div class="share-list">${items.map(([club,title],i)=>{const v=saved()[key(competition,division,category,i)]||{};return `<div class="share-row"><span class="share-place">${i+1}</span><span><span class="share-team">${esc(club)}</span><span class="share-item">${esc(title)}</span></span><span class="share-points">${esc(v.place?`${v.place} · ${pointsFor(competition)[v.place]} pts`:'Not recorded')}</span></div>`}).join('')}</div></div>`
+    b=`<div class="share-section"><h2>${esc(category)} · ${esc(division)}</h2><div class="share-list">${items.map(([club,title],i)=>{const v=saved()[key(competition,division,category,i)]||{};return `<div class="share-row"><span class="share-place">${i+1}</span><span><span class="share-team">${esc(club)}</span><span class="share-item">${esc(title)}</span></span><span class="share-points">${esc(v.place?`${v.place} · ${pts[v.place]} pts`:'Not recorded')}</span></div>`}).join('')}</div></div>`
   }else{
     b=`<div class="share-section"><h2>${esc(division)} aggregate leaderboard</h2><div class="share-board">${leaderboard().map((r,i)=>`<div class="share-board-row"><span class="rank">${i+1}</span><span class="club">${esc(r.club)}</span><span class="total">${r.points} pts</span></div>`).join('')}</div></div>`
   }
